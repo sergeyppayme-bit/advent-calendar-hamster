@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>Адвент-календарь</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% -10%, #2A1F49 0%, #1B1330 55%, #150E26 100%);
+    font-family: 'Work Sans', sans-serif;
+    color: #F4EDE4;
+  }
+  .advent-app {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    padding: 32px 16px 60px;
+  }
+
+  .snow-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .snowflake {
+    position: absolute; top: -10px; border-radius: 50%;
+    background: rgba(244, 237, 228, 0.55);
+    animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-10px) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(110vh) translateX(18px); opacity: 0.2; }
+  }
+
+  .header { position: relative; z-index: 2; text-align: center; max-width: 480px; margin: 0 auto 36px; }
+  .flame-wrap {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 50%; font-size: 26px;
+    background: radial-gradient(circle, rgba(217,164,78,0.35) 0%, rgba(217,164,78,0) 70%);
+    animation: flicker 3.2s ease-in-out infinite; margin-bottom: 10px;
+  }
+  @keyframes flicker { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.08); opacity: 1; } }
+  .title { font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(26px, 6vw, 34px); margin: 0 0 6px; }
+  .subtitle { font-size: 14px; color: #C9BFE0; margin: 0 0 18px; line-height: 1.5; }
+  .toggle-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(244,237,228,0.08); border: 1px solid rgba(244,237,228,0.2);
+    color: #F4EDE4; padding: 8px 16px; border-radius: 999px; font-size: 13px;
+    font-family: 'Work Sans', sans-serif; cursor: pointer;
+  }
+
+  .grid {
+    position: relative; z-index: 2; max-width: 640px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  }
+  @media (max-width: 520px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 9px; } }
+
+  .door-cell { perspective: 900px; }
+  .door-cell.featured { grid-column: span 2; grid-row: span 2; }
+
+  .door {
+    width: 100%; height: 100%; min-height: 64px; border-radius: 10px;
+    border: 1px solid rgba(244,237,228,0.16);
+    background: linear-gradient(160deg, #2C2148 0%, #241C3C 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transform-style: preserve-3d; box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+    transition: transform 0.55s ease; color: inherit; font: inherit;
+  }
+  .door.opened { background: linear-gradient(160deg, #3A2B5C 0%, #2C2148 100%); border-color: rgba(217,164,78,0.45); }
+  .door.locked { opacity: 0.55; }
+  .door.flip { transform: rotateY(-110deg) scale(0.92); }
+  .door.shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
+  }
+  .door-number { font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; }
+  .door-cell.featured .door-number { font-size: 28px; }
+  .door-glow {
+    width: 6px; height: 6px; border-radius: 50%; background: #D9A44E; margin-top: 6px;
+    box-shadow: 0 0 8px 2px rgba(217,164,78,0.7);
+  }
+
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(12, 8, 22, 0.72); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; z-index: 10; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-card {
+    width: 100%; max-width: 360px; background: linear-gradient(165deg, #2C2148 0%, #1F1836 100%);
+    border: 1px solid rgba(217,164,78,0.3); border-radius: 16px; padding: 28px 22px;
+    text-align: center; position: relative;
+  }
+  .close-btn {
+    position: absolute; top: 14px; right: 14px; background: rgba(244,237,228,0.1); border: none;
+    color: #F4EDE4; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;
+  }
+  .media-placeholder {
+    width: 100%; aspect-ratio: 4/3; border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; margin-bottom: 16px; font-size: 40px;
+  }
+  .modal-day { font-family: 'Fraunces', serif; font-size: 15px; color: #D9A44E; margin-bottom: 8px; }
+  .modal-caption { font-size: 16px; line-height: 1.55; margin: 0; }
+</style>
+</head>
+<body>
+<div class="advent-app">
+  <div class="snow-layer" id="snowLayer"></div>
+
+  <div class="header">
+    <div class="flame-wrap">🔥</div>
+    <h1 class="title">Адвент-календарь</h1>
+    <p class="subtitle" id="progressText">Открыто 0 из 25 · коснись окошка своего дня</p>
+    <button class="toggle-btn" id="demoToggle">👁 Предпросмотр: все открыты</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-card" id="modalCard">
+    <button class="close-btn" id="closeBtn">✕</button>
+    <div class="modal-day" id="modalDay"></div>
+    <div class="media-placeholder" id="modalMedia" style="display:none;"></div>
+    <p class="modal-caption" id="modalCaption"></p>
+  </div>
+</div>
+
+<script>
+/*
+  КАК ЗАМЕНИТЬ НА РЕАЛЬНЫЙ КОНТЕНТ:
+  Ниже в массиве SURPRISES у каждого дня меняй:
+    type: "photo" | "video" | "text"
+    caption: подпись/сообщение (для text — это сам текст сюрприза)
+    mediaUrl: путь к файлу для photo/video (например "media/day5.jpg" —
+      создай папку media/ рядом с этим index.html и положи туда файлы)
+  Кнопка "Предпросмотр" вверху открывает все окошки для проверки —
+  выключи её (или удали переменную demoMode = true ниже), чтобы окошки
+  открывались только в свой день по календарю.
+*/
+
+const PLACEHOLDER_LINES = [
+  "Сегодня просто: я тебя люблю.",
+  "Вспомни нашу первую поездку вдвоём.",
+  "Обещание на выходные — впиши своё.",
+  "Маленькая причина, почему мне повезло с тобой.",
+  "Свободный вечер только для нас двоих.",
+  "То, что я никогда не говорил вслух.",
+  "Один твой момент, который я не забуду.",
+  "Купон на завтрак в постель.",
+];
+
+function buildSurprises() {
+  const types = ["photo", "video", "text"];
+  return Array.from({ length: 25 }, (_, i) => {
+    const day = i + 1;
+    const type = types[day % 3];
+    const caption =
+      type === "photo" ? `Фото № ${day} — замени на своё` :
+      type === "video" ? `Видео № ${day} — замени на своё` :
+      PLACEHOLDER_LINES[day % PLACEHOLDER_LINES.length];
+    return { day, type, caption, mediaUrl: null };
+  });
+}
+
+function getUnlockDate(day) {
+  const now = new Date();
+  let year = now.getFullYear();
+  const dec25 = new Date(year, 11, 25, 23, 59, 59);
+  if (now > dec25) year += 1;
+  return new Date(year, 11, day);
+}
+
+function hueFor(day) { return (day * 47) % 360; }
+
+const surprises = buildSurprises();
+const openedDays = new Set();
+let demoMode = true;
+
+const grid = document.getElementById("grid");
+const progressText = document.getElementById("progressText");
+const demoToggle = document.getElementById("demoToggle");
+const modalBackdrop = document.getElementById("modalBackdrop");
+const modalDay = document.getElementById("modalDay");
+const modalMedia = document.getElementById("modalMedia");
+const modalCaption = document.getElementById("modalCaption");
+const closeBtn = document.getElementById("closeBtn");
+
+function isLocked(day) {
+  return !demoMode && new Date() < getUnlockDate(day);
+}
+
+function updateProgress() {
+  progressText.textContent = `Открыто ${openedDays.size} из 25 · коснись окошка своего дня`;
+}
+
+function openModal(day) {
+  const s = surprises.find((x) => x.day === day);
+  modalDay.textContent = `День ${s.day}`;
+  modalCaption.textContent = s.caption;
+  if (s.type === "text") {
+    modalMedia.style.display = "none";
+  } else {
+    modalMedia.style.display = "flex";
+    const h1 = hueFor(s.day), h2 = hueFor(s.day) + 30;
+    modalMedia.style.background = `linear-gradient(160deg, hsl(${h1},45%,30%), hsl(${h2},45%,18%))`;
+    modalMedia.textContent = s.type === "photo" ? "🖼" : "🎬";
+  }
+  modalBackdrop.classList.add("open");
+}
+
+closeBtn.addEventListener("click", () => modalBackdrop.classList.remove("open"));
+modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) modalBackdrop.classList.remove("open"); });
+
+function renderGrid() {
+  grid.innerHTML = "";
+  surprises.forEach((s) => {
+    const featured = s.day % 5 === 0 || s.day === 24 || s.day === 25;
+    const cell = document.createElement("div");
+    cell.className = "door-cell" + (featured ? " featured" : "");
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    const opened = openedDays.has(s.day);
+    const locked = isLocked(s.day);
+    btn.className = "door" + (locked ? " locked" : "") + (opened ? " opened" : "");
+    btn.innerHTML = `<span class="door-number">${s.day}</span>` + (opened ? `<span class="door-glow"></span>` : "");
+
+    btn.addEventListener("click", () => {
+      if (isLocked(s.day)) {
+        btn.classList.add("shake");
+        setTimeout(() => btn.classList.remove("shake"), 400);
+        return;
+      }
+      if (openedDays.has(s.day)) {
+        openModal(s.day);
+        return;
+      }
+      btn.classList.add("flip");
+      setTimeout(() => {
+        openedDays.add(s.day);
+        updateProgress();
+        openModal(s.day);
+        renderGrid();
+      }, 550);
+    });
+
+    cell.appendChild(btn);
+    grid.appendChild(cell);
+  });
+}
+
+demoToggle.addEventListener("click", () => {
+  demoMode = !demoMode;
+  demoToggle.textContent = demoMode ? "👁 Предпросмотр: все открыты" : "🚫 По датам";
+  renderGrid();
+});
+
+function renderSnow() {
+  const layer = document.getElementById("snowLayer");
+  for (let i = 0; i < 36; i++) {
+    const f = document.createElement("div");
+    f.className = "snowflake";
+    const size = 3 + (i % 4);
+    f.style.left = `${(i * 37) % 100}%`;
+    f.style.width = size + "px";
+    f.style.height = size + "px";
+    f.style.animationDuration = `${8 + ((i * 13) % 10)}s`;
+    f.style.animationDelay = `${(i * 0.37) % 8}s`;
+    layer.appendChild(f);
+  }
+}
+
+renderSnow();
+renderGrid();
+updateProgress();
+</script>
+</body>
+</html>
