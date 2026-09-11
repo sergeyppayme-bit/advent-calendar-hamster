@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<meta name="theme-color" content="#1B1330" />
+<meta name="theme-color" content="#F4EEDD" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789130013";
+  var CURRENT_VERSION = "1789131387";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -27,18 +27,18 @@
 })();
 </script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Yellowtail&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500&display=swap');
 
   * { box-sizing: border-box; }
   html {
-    background: #1B1330;
+    background: #F4EEDD;
   }
   html, body {
     margin: 0;
     min-height: 100vh;
-    background: radial-gradient(ellipse at 50% -10%, #2A1F49 0%, #1B1330 55%, #150E26 100%);
+    background: radial-gradient(ellipse at 50% -8%, #FBF6E8 0%, #F4EEDD 55%, #ECE3CC 100%);
     font-family: 'Work Sans', sans-serif;
-    color: #F4EDE4;
+    color: #33403E;
   }
   .advent-app {
     position: relative;
@@ -51,30 +51,34 @@
   .snow-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .snowflake {
     position: absolute; top: -10px; border-radius: 50%;
-    background: rgba(244, 237, 228, 0.55);
+    background: rgba(201, 162, 39, 0.45);
     animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite;
   }
   @keyframes fall {
     0% { transform: translateY(-10px) translateX(0); opacity: 0; }
     10% { opacity: 1; }
-    100% { transform: translateY(110vh) translateX(18px); opacity: 0.2; }
+    100% { transform: translateY(110vh) translateX(18px); opacity: 0.15; }
   }
 
   .header { position: relative; z-index: 2; text-align: center; max-width: 480px; margin: 0 auto 36px; }
   .flame-wrap {
     display: inline-flex; align-items: center; justify-content: center;
     width: 56px; height: 56px; border-radius: 50%; font-size: 26px;
-    background: radial-gradient(circle, rgba(217,164,78,0.35) 0%, rgba(217,164,78,0) 70%);
-    animation: flicker 3.2s ease-in-out infinite; margin-bottom: 10px;
+    background: radial-gradient(circle, rgba(47,111,107,0.16) 0%, rgba(47,111,107,0) 70%);
+    animation: flicker 3.2s ease-in-out infinite; margin-bottom: 6px;
   }
   @keyframes flicker { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.08); opacity: 1; } }
-  .title { font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(26px, 6vw, 34px); margin: 0 0 6px; }
-  .subtitle { font-size: 14px; color: #C9BFE0; margin: 0 0 18px; line-height: 1.5; }
+  .title {
+    font-family: 'Yellowtail', cursive; font-weight: 400; font-size: clamp(38px, 9vw, 52px);
+    margin: 0 0 6px; color: #2F6F6B;
+  }
+  .subtitle { font-size: 14px; color: #6B7A73; margin: 0 0 18px; line-height: 1.5; }
   .toggle-btn {
     display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(244,237,228,0.08); border: 1px solid rgba(244,237,228,0.2);
-    color: #F4EDE4; padding: 8px 16px; border-radius: 999px; font-size: 13px;
-    font-family: 'Work Sans', sans-serif; cursor: pointer;
+    background: #FFFDF6; border: 1px solid rgba(47,111,107,0.35);
+    color: #2F6F6B; padding: 8px 16px; border-radius: 999px; font-size: 13px;
+    font-family: 'Work Sans', sans-serif; font-weight: 500; cursor: pointer;
+    box-shadow: 0 3px 8px rgba(47,111,107,0.1);
   }
 
   .grid {
@@ -87,15 +91,18 @@
   .door-cell.featured { grid-column: span 2; grid-row: span 2; }
 
   .door {
-    width: 100%; height: 100%; min-height: 64px; border-radius: 10px;
-    border: 1px solid rgba(244,237,228,0.16);
-    background: linear-gradient(160deg, #2C2148 0%, #241C3C 100%);
+    width: 100%; height: 100%; min-height: 64px; border-radius: 14px;
+    border: 1px solid rgba(47,111,107,0.14);
+    background: linear-gradient(160deg, #FFFDF6 0%, #F7F0DE 100%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; transform-style: preserve-3d; box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-    transition: transform 0.55s ease; color: inherit; font: inherit;
+    cursor: pointer; transform-style: preserve-3d; box-shadow: 0 6px 14px rgba(47,74,70,0.1);
+    transition: transform 0.55s ease; color: #2F6F6B; font: inherit;
   }
-  .door.opened { background: linear-gradient(160deg, #3A2B5C 0%, #2C2148 100%); border-color: rgba(217,164,78,0.45); }
-  .door.locked { opacity: 0.55; }
+  .door.opened {
+    background: linear-gradient(160deg, #2F6F6B 0%, #275C58 100%);
+    border-color: rgba(201,162,39,0.5); color: #FBF6E8;
+  }
+  .door.locked { opacity: 0.5; }
   .door.flip { transform: rotateY(-110deg) scale(0.92); }
   .door.shake { animation: shake 0.4s; }
   @keyframes shake {
@@ -105,30 +112,30 @@
   .door-number { font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; }
   .door-cell.featured .door-number { font-size: 28px; }
   .door-glow {
-    width: 6px; height: 6px; border-radius: 50%; background: #D9A44E; margin-top: 6px;
-    box-shadow: 0 0 8px 2px rgba(217,164,78,0.7);
+    width: 6px; height: 6px; border-radius: 50%; background: #C9A227; margin-top: 6px;
+    box-shadow: 0 0 8px 2px rgba(201,162,39,0.6);
   }
 
   .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(12, 8, 22, 0.72); backdrop-filter: blur(6px);
+    position: fixed; inset: 0; background: rgba(43, 64, 62, 0.45); backdrop-filter: blur(6px);
     display: none; align-items: center; justify-content: center; z-index: 10; padding: 20px;
   }
   .modal-backdrop.open { display: flex; }
   .modal-card {
-    width: 100%; max-width: 360px; background: linear-gradient(165deg, #2C2148 0%, #1F1836 100%);
-    border: 1px solid rgba(217,164,78,0.3); border-radius: 16px; padding: 28px 22px;
-    text-align: center; position: relative;
+    width: 100%; max-width: 360px; background: #FFFDF6;
+    border: 1px solid rgba(201,162,39,0.35); border-radius: 18px; padding: 28px 22px;
+    text-align: center; position: relative; box-shadow: 0 20px 40px rgba(43,64,62,0.18);
   }
   .close-btn {
-    position: absolute; top: 14px; right: 14px; background: rgba(244,237,228,0.1); border: none;
-    color: #F4EDE4; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;
+    position: absolute; top: 14px; right: 14px; background: rgba(47,111,107,0.1); border: none;
+    color: #2F6F6B; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;
   }
   .media-placeholder {
     width: 100%; aspect-ratio: 4/3; border-radius: 12px; display: flex; align-items: center;
     justify-content: center; margin-bottom: 16px; font-size: 40px;
   }
-  .modal-day { font-family: 'Fraunces', serif; font-size: 15px; color: #D9A44E; margin-bottom: 8px; }
-  .modal-caption { font-size: 16px; line-height: 1.55; margin: 0; }
+  .modal-day { font-family: 'Fraunces', serif; font-size: 15px; color: #C9A227; margin-bottom: 8px; }
+  .modal-caption { font-size: 16px; line-height: 1.55; margin: 0; color: #33403E; }
 </style>
 </head>
 <body>
@@ -136,7 +143,7 @@
   <div class="snow-layer" id="snowLayer"></div>
 
   <div class="header">
-    <div class="flame-wrap">🔥</div>
+    <div class="flame-wrap">🎀</div>
     <h1 class="title">Адвент-календарь</h1>
     <p class="subtitle" id="progressText">Открыто 0 из 25 · коснись окошка своего дня</p>
     <button class="toggle-btn" id="demoToggle">👁 Предпросмотр: все открыты</button>
@@ -199,7 +206,7 @@ function getUnlockDate(day) {
   return new Date(year, 11, day);
 }
 
-function hueFor(day) { return (day * 47) % 360; }
+function hueFor(day) { return day % 2 === 0 ? 172 : 42; } // teal or gold
 
 const surprises = buildSurprises();
 const openedDays = new Set();
@@ -230,8 +237,8 @@ function openModal(day) {
     modalMedia.style.display = "none";
   } else {
     modalMedia.style.display = "flex";
-    const h1 = hueFor(s.day), h2 = hueFor(s.day) + 30;
-    modalMedia.style.background = `linear-gradient(160deg, hsl(${h1},45%,30%), hsl(${h2},45%,18%))`;
+    const h1 = hueFor(s.day), h2 = h1 + 14;
+    modalMedia.style.background = `linear-gradient(160deg, hsl(${h1},38%,58%), hsl(${h2},45%,42%))`;
     modalMedia.textContent = s.type === "photo" ? "🖼" : "🎬";
   }
   modalBackdrop.classList.add("open");
