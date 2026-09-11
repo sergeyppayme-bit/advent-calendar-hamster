@@ -7,6 +7,21 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Адвент-календарь</title>
+<script>
+(function () {
+  var CURRENT_VERSION = "1789129569";
+  fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.v && String(data.v) !== CURRENT_VERSION) {
+        var url = new URL(location.href);
+        url.searchParams.set('v', data.v);
+        location.replace(url.toString());
+      }
+    })
+    .catch(function () {});
+})();
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500&display=swap');
 
