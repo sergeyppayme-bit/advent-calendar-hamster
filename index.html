@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789131387";
+  var CURRENT_VERSION = "1789131739";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -36,7 +36,13 @@
   html, body {
     margin: 0;
     min-height: 100vh;
-    background: radial-gradient(ellipse at 50% -8%, #FBF6E8 0%, #F4EEDD 55%, #ECE3CC 100%);
+    background-image:
+      linear-gradient(180deg, rgba(18,26,40,0.45) 0%, rgba(244,238,221,0.55) 55%, rgba(244,238,221,0.88) 100%),
+      url('background.jpg');
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+    background-color: #F4EEDD;
     font-family: 'Work Sans', sans-serif;
     color: #33403E;
   }
@@ -60,7 +66,11 @@
     100% { transform: translateY(110vh) translateX(18px); opacity: 0.15; }
   }
 
-  .header { position: relative; z-index: 2; text-align: center; max-width: 480px; margin: 0 auto 36px; }
+  .header {
+    position: relative; z-index: 2; text-align: center; max-width: 480px; margin: 0 auto 36px;
+    background: rgba(255,253,246,0.82); backdrop-filter: blur(8px);
+    border-radius: 22px; padding: 26px 20px 22px; box-shadow: 0 12px 30px rgba(43,64,62,0.12);
+  }
   .flame-wrap {
     display: inline-flex; align-items: center; justify-content: center;
     width: 56px; height: 56px; border-radius: 50%; font-size: 26px;
