@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789131739";
+  var CURRENT_VERSION = "1789184210";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -97,24 +97,43 @@
   }
   @media (max-width: 520px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 9px; } }
 
-  .door-cell { perspective: 900px; }
+  .door-cell { perspective: 1000px; }
   .door-cell.featured { grid-column: span 2; grid-row: span 2; }
 
   .door {
-    width: 100%; height: 100%; min-height: 64px; border-radius: 14px;
-    border: 1px solid rgba(47,111,107,0.14);
-    background: linear-gradient(160deg, #FFFDF6 0%, #F7F0DE 100%);
+    position: relative; width: 100%; height: 100%; min-height: 64px;
+    border-radius: 14px; cursor: pointer; background: transparent; border: none;
+    padding: 0; font: inherit; color: #2F6F6B; -webkit-tap-highlight-color: transparent;
+  }
+
+  .door-peek {
+    position: absolute; inset: 0; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; box-shadow: inset 0 1px 3px rgba(43,64,62,0.12);
+  }
+  .door-cell.featured .door-peek { font-size: 32px; }
+
+  .door-flap {
+    position: absolute; inset: 0; border-radius: 14px;
+    background: linear-gradient(155deg, #FBF6E8 0%, #F0E7CE 55%, #EAE0C4 100%);
+    border: 1.5px dashed rgba(47,111,107,0.32);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; transform-style: preserve-3d; box-shadow: 0 6px 14px rgba(47,74,70,0.1);
-    transition: transform 0.55s ease; color: #2F6F6B; font: inherit;
+    box-shadow: 1px 3px 7px rgba(43,64,62,0.14);
+    transform-origin: left center;
+    backface-visibility: hidden;
+    transition: transform 0.65s cubic-bezier(.32,1.15,.4,1), box-shadow 0.65s ease;
   }
-  .door.opened {
-    background: linear-gradient(160deg, #2F6F6B 0%, #275C58 100%);
-    border-color: rgba(201,162,39,0.5); color: #FBF6E8;
+  .door-flap::before {
+    content: ''; position: absolute; top: -1px; right: 9px; width: 13px; height: 8px;
+    background: linear-gradient(135deg, transparent 50%, rgba(201,162,39,0.55) 50%);
+    border-radius: 0 0 3px 0;
   }
-  .door.locked { opacity: 0.5; }
-  .door.flip { transform: rotateY(-110deg) scale(0.92); }
-  .door.shake { animation: shake 0.4s; }
+  .door.locked .door-flap { opacity: 0.6; }
+  .door.flip .door-flap, .door.opened .door-flap {
+    transform: rotateY(-108deg);
+    box-shadow: 12px 5px 20px rgba(43,64,62,0.3);
+  }
+  .door.shake .door-flap { animation: shake 0.4s; }
   @keyframes shake {
     0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); }
     40% { transform: translateX(5px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
@@ -122,7 +141,8 @@
   .door-number { font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; }
   .door-cell.featured .door-number { font-size: 28px; }
   .door-glow {
-    width: 6px; height: 6px; border-radius: 50%; background: #C9A227; margin-top: 6px;
+    position: absolute; bottom: 6px; right: 8px;
+    width: 6px; height: 6px; border-radius: 50%; background: #C9A227;
     box-shadow: 0 0 8px 2px rgba(201,162,39,0.6);
   }
 
@@ -218,6 +238,13 @@ function getUnlockDate(day) {
 
 function hueFor(day) { return day % 2 === 0 ? 172 : 42; } // teal or gold
 
+function peekFor(s) {
+  const hue = hueFor(s.day);
+  const bg = `hsl(${hue}, 40%, 88%)`;
+  const icon = s.type === "photo" ? "🖼" : s.type === "video" ? "🎬" : "💌";
+  return { bg, icon };
+}
+
 const surprises = buildSurprises();
 const openedDays = new Set();
 let demoMode = true;
@@ -263,13 +290,25 @@ function renderGrid() {
     const featured = s.day % 5 === 0 || s.day === 24 || s.day === 25;
     const cell = document.createElement("div");
     cell.className = "door-cell" + (featured ? " featured" : "");
+    const tilt = ((s.day * 13) % 5) - 2; // -2..2deg, handmade paper feel
+    cell.style.transform = `rotate(${tilt}deg)`;
 
     const btn = document.createElement("button");
     btn.type = "button";
     const opened = openedDays.has(s.day);
     const locked = isLocked(s.day);
     btn.className = "door" + (locked ? " locked" : "") + (opened ? " opened" : "");
-    btn.innerHTML = `<span class="door-number">${s.day}</span>` + (opened ? `<span class="door-glow"></span>` : "");
+
+    const peek = peekFor(s);
+    btn.innerHTML = `
+      <div class="door-peek" style="background:${peek.bg}">
+        ${peek.icon}
+        ${opened ? '<span class="door-glow"></span>' : ""}
+      </div>
+      <div class="door-flap">
+        <span class="door-number">${s.day}</span>
+      </div>
+    `;
 
     btn.addEventListener("click", () => {
       if (isLocked(s.day)) {
@@ -287,7 +326,7 @@ function renderGrid() {
         updateProgress();
         openModal(s.day);
         renderGrid();
-      }, 550);
+      }, 600);
     });
 
     cell.appendChild(btn);
