@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789184210";
+  var CURRENT_VERSION = "1789185430";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -176,7 +176,7 @@
     <div class="flame-wrap">🎀</div>
     <h1 class="title">Адвент-календарь</h1>
     <p class="subtitle" id="progressText">Открыто 0 из 25 · коснись окошка своего дня</p>
-    <button class="toggle-btn" id="demoToggle">👁 Предпросмотр: все открыты</button>
+    <button class="toggle-btn" id="demoToggle">🚫 По датам</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -247,7 +247,7 @@ function peekFor(s) {
 
 const surprises = buildSurprises();
 const openedDays = new Set();
-let demoMode = true;
+let demoMode = false;
 
 const grid = document.getElementById("grid");
 const progressText = document.getElementById("progressText");
