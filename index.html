@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789185430";
+  var CURRENT_VERSION = "1789185858";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -166,6 +166,18 @@
   }
   .modal-day { font-family: 'Fraunces', serif; font-size: 15px; color: #C9A227; margin-bottom: 8px; }
   .modal-caption { font-size: 16px; line-height: 1.55; margin: 0; color: #33403E; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(16px);
+    max-width: 320px; width: calc(100% - 40px);
+    background: #FFFDF6; border: 1px solid rgba(201,162,39,0.4);
+    color: #33403E; font-size: 14px; line-height: 1.5; text-align: center;
+    padding: 14px 18px; border-radius: 16px; box-shadow: 0 14px 28px rgba(43,64,62,0.22);
+    opacity: 0; pointer-events: none; z-index: 20;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -181,6 +193,8 @@
 
   <div class="grid" id="grid"></div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal-card" id="modalCard">
@@ -243,6 +257,30 @@ function peekFor(s) {
   const bg = `hsl(${hue}, 40%, 88%)`;
   const icon = s.type === "photo" ? "🖼" : s.type === "video" ? "🎬" : "💌";
   return { bg, icon };
+}
+
+const LOCKED_MESSAGES = [
+  "🐹 Кто тут такой любопытный хомяк?! Рано-рано, держи лапки подальше от этого подарочка!",
+  "🎁 Эй, хомяк, не жульничай! У каждого сюрприза свой день 😏",
+  "👀 Я всё вижу, хомяк! Этот подарок пока не твой. Терпение, пушистик ❤️",
+  "🐹 А лапки-то шустрые! Но этот подарок ещё под замочком 🔐",
+  "😈 Попытка хомячьего взлома обнаружена! Возвращайся завтра.",
+];
+let lastMessageIndex = -1;
+
+const toast = document.getElementById("toast");
+let toastTimeout = null;
+
+function showToast() {
+  let idx = Math.floor(Math.random() * LOCKED_MESSAGES.length);
+  if (LOCKED_MESSAGES.length > 1 && idx === lastMessageIndex) {
+    idx = (idx + 1) % LOCKED_MESSAGES.length;
+  }
+  lastMessageIndex = idx;
+  toast.textContent = LOCKED_MESSAGES[idx];
+  toast.classList.add("show");
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
 const surprises = buildSurprises();
@@ -314,6 +352,7 @@ function renderGrid() {
       if (isLocked(s.day)) {
         btn.classList.add("shake");
         setTimeout(() => btn.classList.remove("shake"), 400);
+        showToast();
         return;
       }
       if (openedDays.has(s.day)) {
