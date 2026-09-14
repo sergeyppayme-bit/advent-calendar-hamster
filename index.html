@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789381494";
+  var CURRENT_VERSION = "1789381722";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -190,20 +190,23 @@
   }
   .modal-backdrop.open { display: flex; }
   .modal-card {
-    width: 100%; max-width: 360px; background: #FFFDF6;
-    border: 1px solid rgba(201,162,39,0.35); border-radius: 18px; padding: 28px 22px;
-    text-align: center; position: relative; box-shadow: 0 20px 40px rgba(43,64,62,0.18);
+    width: 100%; max-width: 360px;
+    background-image: linear-gradient(rgba(20,26,24,0.55), rgba(20,26,24,0.68)), url('cats/peek-bg.jpg');
+    background-size: cover; background-position: center;
+    border: 1px solid rgba(201,162,39,0.45); border-radius: 18px; padding: 32px 22px;
+    text-align: center; position: relative; box-shadow: 0 20px 40px rgba(43,64,62,0.25);
+    min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
   .close-btn {
-    position: absolute; top: 14px; right: 14px; background: rgba(47,111,107,0.1); border: none;
-    color: #2F6F6B; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;
+    position: absolute; top: 14px; right: 14px; background: rgba(255,253,246,0.18); border: none;
+    color: #FFFDF6; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;
   }
   .media-placeholder {
     width: 100%; aspect-ratio: 4/3; border-radius: 12px; display: flex; align-items: center;
-    justify-content: center; margin-bottom: 16px; font-size: 40px;
+    justify-content: center; margin-bottom: 16px; font-size: 40px; overflow: hidden;
   }
-  .modal-day { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 14px; color: #C9A227; margin-bottom: 8px; }
-  .modal-caption { font-size: 16px; line-height: 1.55; margin: 0; color: #33403E; }
+  .modal-day { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 14px; color: #E8C878; margin-bottom: 10px; }
+  .modal-caption { font-size: 17px; line-height: 1.55; margin: 0; color: #FFFDF6; text-shadow: 0 1px 6px rgba(0,0,0,0.35); }
 
   .toast-backdrop {
     position: fixed; inset: 0; z-index: 19;
@@ -287,8 +290,9 @@ function festiveFor(day) {
 function buildSurprises() {
   return Array.from({ length: 25 }, (_, i) => {
     const day = i + 1;
-    const f = festiveFor(day);
-    return { day, type: "photo", caption: `${f.title} — ${f.subtitle}`, mediaUrl: null };
+    // Заглушка на время: реальный список (текст/фото/видео на каждый день)
+    // будет добавлен позже — тогда type и mediaUrl заполнятся по каждому дню.
+    return { day, type: "text", caption: `Сюрприз дня ${day} — совсем скоро здесь будет настоящее сообщение`, mediaUrl: null };
   });
 }
 
@@ -362,12 +366,18 @@ function openModal(day) {
   const s = surprises.find((x) => x.day === day);
   modalDay.textContent = `День ${s.day}`;
   modalCaption.textContent = s.caption;
-  if (s.type === "text") {
-    modalMedia.style.display = "none";
-  } else {
+  if (s.mediaUrl && (s.type === "photo" || s.type === "video")) {
     modalMedia.style.display = "flex";
-    modalMedia.style.background = `#F0E7CE center / contain no-repeat url('${catUrlFor(s.day)}')`;
-    modalMedia.textContent = "";
+    if (s.type === "video") {
+      modalMedia.style.background = "";
+      modalMedia.innerHTML = `<video src="${s.mediaUrl}" controls playsinline style="width:100%;height:100%;object-fit:cover;border-radius:12px;"></video>`;
+    } else {
+      modalMedia.style.background = `#F0E7CE center / contain no-repeat url('${s.mediaUrl}')`;
+      modalMedia.innerHTML = "";
+    }
+  } else {
+    modalMedia.style.display = "none";
+    modalMedia.innerHTML = "";
   }
   modalBackdrop.classList.add("open");
 }
