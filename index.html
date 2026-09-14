@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789372466";
+  var CURRENT_VERSION = "1789373257";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -264,27 +264,30 @@
   открывались только в свой день по календарю.
 */
 
-const PLACEHOLDER_LINES = [
-  "Сегодня просто: я тебя люблю.",
-  "Вспомни нашу первую поездку вдвоём.",
-  "Обещание на выходные — впиши своё.",
-  "Маленькая причина, почему мне повезло с тобой.",
-  "Свободный вечер только для нас двоих.",
-  "То, что я никогда не говорил вслух.",
-  "Один твой момент, который я не забуду.",
-  "Купон на завтрак в постель.",
+const FESTIVE = [
+  { title: "Классика", subtitle: "Потому что коты всегда в тренде", corner: "bl" },
+  { title: "Сюрприз внутри", subtitle: "Интрига каждый день", corner: "bl" },
+  { title: "Двойное счастье", subtitle: "Лучшие подарки — вместе", corner: "bl" },
+  { title: "Новогодний образ", subtitle: "Даже коты верят в чудеса", corner: "tl" },
+  { title: "Помощник Санты", subtitle: "Проверяет гирлянду на прочность", corner: "bl" },
+  { title: "Окошко", subtitle: "Загляни, кто там?", corner: "bl" },
+  { title: "Кот в коробке", subtitle: "Иногда самое простое — самое лучшее", corner: "tl" },
+  { title: "В тёплом носке", subtitle: "Маленькие радости в больших деталях", corner: "tl" },
+  { title: "Готовы к приключениям", subtitle: "В любой день, в любую погоду", corner: "bl" },
+  { title: "Любопытный исследователь", subtitle: "Всё под контролем! (почти)", corner: "bl" },
+  { title: "Кофейное настроение", subtitle: "Для уютных дней", corner: "bl" },
+  { title: "В путь за чудесами", subtitle: "Новые истории каждый день", corner: "bl" },
 ];
 
+function festiveFor(day) {
+  return FESTIVE[(day - 1) % FESTIVE.length];
+}
+
 function buildSurprises() {
-  const types = ["photo", "video", "text"];
   return Array.from({ length: 25 }, (_, i) => {
     const day = i + 1;
-    const type = types[day % 3];
-    const caption =
-      type === "photo" ? `Фото № ${day} — замени на своё` :
-      type === "video" ? `Видео № ${day} — замени на своё` :
-      PLACEHOLDER_LINES[day % PLACEHOLDER_LINES.length];
-    return { day, type, caption, mediaUrl: null };
+    const f = festiveFor(day);
+    return { day, type: "photo", caption: `${f.title} — ${f.subtitle}`, mediaUrl: null };
   });
 }
 
@@ -296,21 +299,10 @@ function getUnlockDate(day) {
   return new Date(year, 11, day);
 }
 
-function hueFor(day) { return day % 2 === 0 ? 172 : 42; } // teal or gold
-
 function catUrlFor(day) {
-  return `cats/cat${String(day).padStart(2, "0")}.jpg`;
+  const idx = ((day - 1) % 12) + 1;
+  return `cats/festive${String(idx).padStart(2, "0")}.jpg`;
 }
-
-// Corner with the most free (uniform, non-cat) space in each photo,
-// picked automatically so the number badge never sits on the cat's face.
-const BADGE_CORNER = {
-  1: "br", 2: "br", 3: "tl", 4: "br", 5: "bl",
-  6: "br", 7: "tr", 8: "br", 9: "tr", 10: "tl",
-  11: "bl", 12: "bl", 13: "bl", 14: "br", 15: "br",
-  16: "br", 17: "tl", 18: "tl", 19: "tl", 20: "br",
-  21: "bl", 22: "tl", 23: "br", 24: "tr", 25: "tr",
-};
 
 const LOCKED_MESSAGES = [
   "🐹 Кто тут такой любопытный хомяк?! Рано-рано, держи лапки подальше от этого подарочка!",
@@ -403,7 +395,7 @@ function renderGrid() {
     btn.className = "door" + (locked ? " locked" : "") + (opened ? " opened" : "");
 
     const catUrl = catUrlFor(s.day);
-    const corner = BADGE_CORNER[s.day] || "tl";
+    const corner = festiveFor(s.day).corner;
     btn.innerHTML = `
       <div class="door-peek">
         🎄
