@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789372248";
+  var CURRENT_VERSION = "1789372466";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -204,17 +204,25 @@
   .modal-day { font-family: 'Fraunces', serif; font-size: 15px; color: #C9A227; margin-bottom: 8px; }
   .modal-caption { font-size: 16px; line-height: 1.55; margin: 0; color: #33403E; }
 
-  .toast {
-    position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom));
-    transform: translateX(-50%) translateY(16px);
-    max-width: 320px; width: calc(100% - 40px);
-    background: #FFFDF6; border: 1px solid rgba(201,162,39,0.4);
-    color: #33403E; font-size: 14px; line-height: 1.5; text-align: center;
-    padding: 14px 18px; border-radius: 16px; box-shadow: 0 14px 28px rgba(43,64,62,0.22);
-    opacity: 0; pointer-events: none; z-index: 20;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+  .toast-backdrop {
+    position: fixed; inset: 0; z-index: 19;
+    background: rgba(43,64,62,0.32);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
   }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast-backdrop.show { opacity: 1; }
+
+  .toast {
+    position: fixed; left: 50%; top: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    max-width: 320px; width: calc(100% - 64px);
+    background: #FFFDF6; border: 1px solid rgba(201,162,39,0.4);
+    color: #33403E; font-size: 15px; line-height: 1.6; text-align: center;
+    padding: 22px 22px; border-radius: 18px; box-shadow: 0 20px 40px rgba(43,64,62,0.3);
+    opacity: 0; pointer-events: none; z-index: 20;
+    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(.34,1.4,.4,1);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 </style>
 </head>
 <body>
@@ -231,6 +239,7 @@
   <button class="dev-toggle" id="demoToggle">режим предпросмотра</button>
 </div>
 
+<div class="toast-backdrop" id="toastBackdrop"></div>
 <div class="toast" id="toast"></div>
 
 <div class="modal-backdrop" id="modalBackdrop">
@@ -313,7 +322,13 @@ const LOCKED_MESSAGES = [
 let lastMessageIndex = -1;
 
 const toast = document.getElementById("toast");
+const toastBackdrop = document.getElementById("toastBackdrop");
 let toastTimeout = null;
+
+function hideToast() {
+  toast.classList.remove("show");
+  toastBackdrop.classList.remove("show");
+}
 
 function showToast() {
   let idx = Math.floor(Math.random() * LOCKED_MESSAGES.length);
@@ -323,9 +338,15 @@ function showToast() {
   lastMessageIndex = idx;
   toast.textContent = LOCKED_MESSAGES[idx];
   toast.classList.add("show");
+  toastBackdrop.classList.add("show");
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => toast.classList.remove("show"), 2600);
+  toastTimeout = setTimeout(hideToast, 2600);
 }
+
+toastBackdrop.addEventListener("click", () => {
+  clearTimeout(toastTimeout);
+  hideToast();
+});
 
 const surprises = buildSurprises();
 const openedDays = new Set();
