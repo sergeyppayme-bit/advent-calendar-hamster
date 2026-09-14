@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789374606";
+  var CURRENT_VERSION = "1789379507";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -27,7 +27,7 @@
 })();
 </script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Yellowtail&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500&display=swap');
 
   * { box-sizing: border-box; }
   html {
@@ -73,7 +73,7 @@
   }
 
   .title {
-    font-family: 'Yellowtail', cursive; font-weight: 400; font-size: clamp(38px, 9vw, 52px);
+    font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: clamp(26px, 6vw, 34px);
     margin: 0 0 6px; color: #275C58;
     text-shadow: 0 0 22px rgba(255,253,246,1), 0 0 10px rgba(255,253,246,1), 0 2px 4px rgba(255,253,246,0.9);
   }
