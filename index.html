@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789381722";
+  var CURRENT_VERSION = "1789381995";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -241,6 +241,7 @@
   <div class="grid" id="grid"></div>
 
   <button class="dev-toggle" id="demoToggle">режим предпросмотра</button>
+  <button class="dev-toggle" id="resetBtn">сбросить прогресс</button>
 </div>
 
 <div class="toast-backdrop" id="toastBackdrop"></div>
@@ -342,7 +343,25 @@ toastBackdrop.addEventListener("click", () => {
 });
 
 const surprises = buildSurprises();
-const openedDays = new Set();
+const STORAGE_KEY = "advent-opened-days";
+
+function loadOpenedDays() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function saveOpenedDays() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...openedDays]));
+  } catch (e) {}
+}
+
+const openedDays = loadOpenedDays();
 let demoMode = false;
 
 const grid = document.getElementById("grid");
@@ -414,19 +433,20 @@ function renderGrid() {
     `;
 
     btn.addEventListener("click", () => {
+      if (openedDays.has(s.day)) {
+        openModal(s.day);
+        return;
+      }
       if (isLocked(s.day)) {
         btn.classList.add("shake");
         setTimeout(() => btn.classList.remove("shake"), 400);
         showToast();
         return;
       }
-      if (openedDays.has(s.day)) {
-        openModal(s.day);
-        return;
-      }
       btn.classList.add("flip");
       setTimeout(() => {
         openedDays.add(s.day);
+        saveOpenedDays();
         updateProgress();
         openModal(s.day);
         renderGrid();
@@ -441,6 +461,16 @@ function renderGrid() {
 demoToggle.addEventListener("click", () => {
   demoMode = !demoMode;
   demoToggle.textContent = demoMode ? "все открыто (тест)" : "режим предпросмотра";
+  renderGrid();
+});
+
+const resetBtn = document.getElementById("resetBtn");
+resetBtn.addEventListener("click", () => {
+  const sure = confirm("Сбросить весь прогресс? Все открытые окошки снова закроются.");
+  if (!sure) return;
+  openedDays.clear();
+  saveOpenedDays();
+  updateProgress();
   renderGrid();
 });
 
