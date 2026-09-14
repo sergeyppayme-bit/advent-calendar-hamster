@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789374419";
+  var CURRENT_VERSION = "1789374606";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -305,10 +305,6 @@ function catUrlFor(day) {
 }
 
 const LOCKED_MESSAGES = [
-  "🐹 Кто тут такой любопытный хомяк?! Рано-рано, держи лапки подальше от этого подарочка!",
-  "🎁 Эй, хомяк, не жульничай! У каждого сюрприза свой день 😏",
-  "👀 Я всё вижу, хомяк! Этот подарок пока не твой. Терпение, пушистик ❤️",
-  "🐹 А лапки-то шустрые! Но этот подарок ещё под замочком 🔐",
   "😈 Попытка хомячьего взлома обнаружена! Возвращайся завтра.",
 ];
 let lastMessageIndex = -1;
