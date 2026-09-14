@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789370718";
+  var CURRENT_VERSION = "1789370969";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -114,6 +114,7 @@
     position: absolute; inset: 0; border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; box-shadow: inset 0 1px 3px rgba(43,64,62,0.12);
+    background-size: cover; background-position: center; background-color: #EAE0C4;
     transform: scale(0.8); opacity: 0.7;
     transition: transform 0.4s ease 0.22s, opacity 0.4s ease 0.22s;
   }
@@ -269,11 +270,8 @@ function getUnlockDate(day) {
 
 function hueFor(day) { return day % 2 === 0 ? 172 : 42; } // teal or gold
 
-function peekFor(s) {
-  const hue = hueFor(s.day);
-  const bg = `hsl(${hue}, 40%, 88%)`;
-  const icon = s.type === "photo" ? "🖼" : s.type === "video" ? "🎬" : "💌";
-  return { bg, icon };
+function catUrlFor(day) {
+  return `cats/cat${String(day).padStart(2, "0")}.jpg`;
 }
 
 const LOCKED_MESSAGES = [
@@ -329,9 +327,8 @@ function openModal(day) {
     modalMedia.style.display = "none";
   } else {
     modalMedia.style.display = "flex";
-    const h1 = hueFor(s.day), h2 = h1 + 14;
-    modalMedia.style.background = `linear-gradient(160deg, hsl(${h1},38%,58%), hsl(${h2},45%,42%))`;
-    modalMedia.textContent = s.type === "photo" ? "🖼" : "🎬";
+    modalMedia.style.background = `center / cover no-repeat url('${catUrlFor(s.day)}')`;
+    modalMedia.textContent = "";
   }
   modalBackdrop.classList.add("open");
 }
@@ -354,10 +351,9 @@ function renderGrid() {
     const locked = isLocked(s.day);
     btn.className = "door" + (locked ? " locked" : "") + (opened ? " opened" : "");
 
-    const peek = peekFor(s);
+    const catUrl = catUrlFor(s.day);
     btn.innerHTML = `
-      <div class="door-peek" style="background:${peek.bg}">
-        ${peek.icon}
+      <div class="door-peek" style="background-image:url('${catUrl}')">
         ${opened ? '<span class="door-glow"></span>' : ""}
       </div>
       <div class="door-flap">
