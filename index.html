@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789373257";
+  var CURRENT_VERSION = "1789374419";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -265,18 +265,18 @@
 */
 
 const FESTIVE = [
-  { title: "Классика", subtitle: "Потому что коты всегда в тренде", corner: "bl" },
-  { title: "Сюрприз внутри", subtitle: "Интрига каждый день", corner: "bl" },
-  { title: "Двойное счастье", subtitle: "Лучшие подарки — вместе", corner: "bl" },
-  { title: "Новогодний образ", subtitle: "Даже коты верят в чудеса", corner: "tl" },
-  { title: "Помощник Санты", subtitle: "Проверяет гирлянду на прочность", corner: "bl" },
-  { title: "Окошко", subtitle: "Загляни, кто там?", corner: "bl" },
-  { title: "Кот в коробке", subtitle: "Иногда самое простое — самое лучшее", corner: "tl" },
-  { title: "В тёплом носке", subtitle: "Маленькие радости в больших деталях", corner: "tl" },
-  { title: "Готовы к приключениям", subtitle: "В любой день, в любую погоду", corner: "bl" },
-  { title: "Любопытный исследователь", subtitle: "Всё под контролем! (почти)", corner: "bl" },
-  { title: "Кофейное настроение", subtitle: "Для уютных дней", corner: "bl" },
-  { title: "В путь за чудесами", subtitle: "Новые истории каждый день", corner: "bl" },
+  { title: "Сюрприз дня 1", subtitle: "Впиши своё сообщение", corner: "tr" },
+  { title: "Сюрприз дня 2", subtitle: "Впиши своё сообщение", corner: "bl" },
+  { title: "Сюрприз дня 3", subtitle: "Впиши своё сообщение", corner: "br" },
+  { title: "Сюрприз дня 4", subtitle: "Впиши своё сообщение", corner: "tl" },
+  { title: "Сюрприз дня 5", subtitle: "Впиши своё сообщение", corner: "tl" },
+  { title: "Сюрприз дня 6", subtitle: "Впиши своё сообщение", corner: "bl" },
+  { title: "Сюрприз дня 7", subtitle: "Впиши своё сообщение", corner: "tl" },
+  { title: "Сюрприз дня 8", subtitle: "Впиши своё сообщение", corner: "tr" },
+  { title: "Сюрприз дня 9", subtitle: "Впиши своё сообщение", corner: "tr" },
+  { title: "Сюрприз дня 10", subtitle: "Впиши своё сообщение", corner: "tr" },
+  { title: "Сюрприз дня 11", subtitle: "Впиши своё сообщение", corner: "tr" },
+  { title: "Сюрприз дня 12", subtitle: "Впиши своё сообщение", corner: "tl" },
 ];
 
 function festiveFor(day) {
@@ -301,7 +301,7 @@ function getUnlockDate(day) {
 
 function catUrlFor(day) {
   const idx = ((day - 1) % 12) + 1;
-  return `cats/festive${String(idx).padStart(2, "0")}.jpg`;
+  return `cats/festiveb${String(idx).padStart(2, "0")}.jpg`;
 }
 
 const LOCKED_MESSAGES = [
