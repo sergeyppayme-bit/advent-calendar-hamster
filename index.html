@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789371648";
+  var CURRENT_VERSION = "1789371839";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -99,6 +99,7 @@
 
   .door-cell { perspective: 1000px; }
   .door-cell.featured { grid-column: span 2; grid-row: span 2; }
+  .door-cell.wide { grid-column: span 2; grid-row: span 1; }
 
   .door {
     position: relative; width: 100%; height: 100%; min-height: 64px;
@@ -129,7 +130,8 @@
   }
   .door-photo {
     width: 76%; height: 76%; border-radius: 10px;
-    background-size: cover; background-position: center; background-color: #EAE0C4;
+    background-size: contain; background-repeat: no-repeat; background-position: center;
+    background-color: #F0E7CE;
     box-shadow: inset 0 0 0 1px rgba(255,253,246,0.6), 0 1px 5px rgba(43,64,62,0.22);
   }
   .door-flap::before {
@@ -354,7 +356,7 @@ function openModal(day) {
     modalMedia.style.display = "none";
   } else {
     modalMedia.style.display = "flex";
-    modalMedia.style.background = `center / cover no-repeat url('${catUrlFor(s.day)}')`;
+    modalMedia.style.background = `#F0E7CE center / contain no-repeat url('${catUrlFor(s.day)}')`;
     modalMedia.textContent = "";
   }
   modalBackdrop.classList.add("open");
@@ -366,9 +368,10 @@ modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop)
 function renderGrid() {
   grid.innerHTML = "";
   surprises.forEach((s) => {
-    const featured = s.day % 5 === 0 || s.day === 24 || s.day === 25;
+    const wide = s.day === 23 || s.day === 24;
+    const featured = (s.day % 5 === 0 || s.day === 25) && !wide;
     const cell = document.createElement("div");
-    cell.className = "door-cell" + (featured ? " featured" : "");
+    cell.className = "door-cell" + (featured ? " featured" : "") + (wide ? " wide" : "");
     const tilt = ((s.day * 13) % 5) - 2; // -2..2deg, handmade paper feel
     cell.style.transform = `rotate(${tilt}deg)`;
 
