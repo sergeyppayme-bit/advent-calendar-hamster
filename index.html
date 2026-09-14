@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789370969";
+  var CURRENT_VERSION = "1789371156";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -68,22 +68,18 @@
 
   .header {
     position: relative; z-index: 2; text-align: center; max-width: 480px; margin: 0 auto 32px;
+    padding: 30px 20px;
+    background: radial-gradient(ellipse 75% 85% at 50% 50%, rgba(255,253,246,0.65) 0%, rgba(255,253,246,0.28) 55%, rgba(255,253,246,0) 80%);
   }
-  .flame-wrap {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 56px; height: 56px; border-radius: 50%; font-size: 26px;
-    background: radial-gradient(circle, rgba(47,111,107,0.16) 0%, rgba(47,111,107,0) 70%);
-    animation: flicker 3.2s ease-in-out infinite; margin-bottom: 6px;
-  }
-  @keyframes flicker { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.08); opacity: 1; } }
+
   .title {
     font-family: 'Yellowtail', cursive; font-weight: 400; font-size: clamp(38px, 9vw, 52px);
-    margin: 0 0 6px; color: #2F6F6B;
-    text-shadow: 0 0 18px rgba(255,253,246,0.9), 0 0 6px rgba(255,253,246,0.9);
+    margin: 0 0 6px; color: #275C58;
+    text-shadow: 0 0 22px rgba(255,253,246,1), 0 0 10px rgba(255,253,246,1), 0 2px 4px rgba(255,253,246,0.9);
   }
   .subtitle {
-    font-size: 14px; color: #3E4A46; margin: 0 0 18px; line-height: 1.5;
-    text-shadow: 0 0 10px rgba(255,253,246,0.85);
+    font-size: 14px; color: #33403E; margin: 0 0 18px; line-height: 1.5;
+    text-shadow: 0 0 14px rgba(255,253,246,1), 0 0 6px rgba(255,253,246,1);
   }
   .dev-toggle {
     display: block;
@@ -135,7 +131,7 @@
     background: linear-gradient(135deg, transparent 50%, rgba(201,162,39,0.55) 50%);
     border-radius: 0 0 3px 0;
   }
-  .door.locked .door-flap { opacity: 0.6; }
+  .door.locked .door-flap { filter: brightness(0.9) saturate(0.85); }
   @keyframes doorOpen {
     0%   { transform: rotateY(0deg) scale(1); }
     55%  { transform: rotateY(-126deg) scale(1.05); }
@@ -202,7 +198,6 @@
   <div class="snow-layer" id="snowLayer"></div>
 
   <div class="header">
-    <div class="flame-wrap">🎀</div>
     <h1 class="title">Адвент-календарь</h1>
     <p class="subtitle" id="progressText">Открыто 0 из 25 · коснись окошка своего дня</p>
   </div>
