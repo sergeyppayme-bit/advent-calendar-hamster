@@ -13,12 +13,13 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1789381995";
+  var CURRENT_VERSION = "1794288143";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
-      if (data.v && String(data.v) !== CURRENT_VERSION) {
-        var url = new URL(location.href);
+      var url = new URL(location.href);
+      // Не перезагружать повторно, если уже пробовали с этой версией (защита от бесконечной перезагрузки)
+      if (data.v && String(data.v) !== CURRENT_VERSION && url.searchParams.get('v') !== String(data.v)) {
         url.searchParams.set('v', data.v);
         location.replace(url.toString());
       }
@@ -90,6 +91,8 @@
     text-decoration: underline; text-underline-offset: 3px;
     cursor: pointer; padding: 8px;
   }
+  .dev-toggle { position: relative; z-index: 3; }
+  .dev-toggle[hidden] { display: none; }
 
   .grid {
     position: relative; z-index: 2; max-width: 640px; margin: 0 auto;
@@ -139,6 +142,14 @@
     content: ''; position: absolute; top: -1px; right: 9px; width: 13px; height: 8px;
     background: linear-gradient(135deg, transparent 50%, rgba(201,162,39,0.55) 50%);
     border-radius: 0 0 3px 0;
+  }
+  .door.today .door-flap {
+    border: 2px solid #C9A227;
+    animation: todayPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes todayPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(201,162,39,0.55), 1px 3px 7px rgba(43,64,62,0.14); }
+    50%     { box-shadow: 0 0 0 7px rgba(201,162,39,0), 1px 3px 7px rgba(43,64,62,0.14); }
   }
   .door.locked .door-flap { filter: brightness(0.9) saturate(0.85); }
   @keyframes doorOpen {
@@ -227,6 +238,11 @@
     transition: opacity 0.3s ease, transform 0.35s cubic-bezier(.34,1.4,.4,1);
   }
   .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .snow-layer { display: none; }
+    .door.today .door-flap { animation: none; }
+  }
 </style>
 </head>
 <body>
@@ -235,13 +251,13 @@
 
   <div class="header">
     <h1 class="title">Адвент-календарь</h1>
-    <p class="subtitle" id="progressText">Открыто 0 из 25 · коснись окошка своего дня</p>
+    <p class="subtitle" id="progressText">Открыто 0 из 25 · коснись окошка сегодняшней даты</p>
   </div>
 
   <div class="grid" id="grid"></div>
 
-  <button class="dev-toggle" id="demoToggle">режим предпросмотра</button>
-  <button class="dev-toggle" id="resetBtn">сбросить прогресс</button>
+  <button class="dev-toggle" id="demoToggle" hidden>режим предпросмотра</button>
+  <button class="dev-toggle" id="resetBtn" hidden>сбросить прогресс</button>
 </div>
 
 <div class="toast-backdrop" id="toastBackdrop"></div>
@@ -264,12 +280,13 @@
     caption: подпись/сообщение (для text — это сам текст сюрприза)
     mediaUrl: путь к файлу для photo/video (например "media/day5.jpg" —
       создай папку media/ рядом с этим index.html и положи туда файлы)
-  Кнопка "Предпросмотр" вверху открывает все окошки для проверки —
-  выключи её (или удали переменную demoMode = true ниже), чтобы окошки
-  открывались только в свой день по календарю.
+  Окошки — это даты с 7 по 31 декабря (YEAR ниже). Каждое открывается в свой день.
+  Служебные кнопки «режим предпросмотра» и «сбросить прогресс» видны только
+  по ссылке с ?dev=1 в конце адреса — получатель их не увидит.
+  В режиме предпросмотра открытые окошки НЕ сохраняются.
 */
 
-const FESTIVE = [
+const FESTIVE = [ // corner — в каком углу номер окошка (по порядку с 7 декабря)
   { title: "Сюрприз дня 1", subtitle: "Впиши своё сообщение", corner: "tr" },
   { title: "Сюрприз дня 2", subtitle: "Впиши своё сообщение", corner: "bl" },
   { title: "Сюрприз дня 3", subtitle: "Впиши своё сообщение", corner: "br" },
@@ -285,35 +302,56 @@ const FESTIVE = [
 ];
 
 function festiveFor(day) {
-  return FESTIVE[(day - 1) % FESTIVE.length];
+  return FESTIVE[(day - FIRST_DAY) % FESTIVE.length];
 }
 
+const YEAR = 2026;
+const FIRST_DAY = 7;   // 7 декабря
+const LAST_DAY = 31;   // 31 декабря
+const TOTAL_DAYS = LAST_DAY - FIRST_DAY + 1; // 25
+
 function buildSurprises() {
-  return Array.from({ length: 25 }, (_, i) => {
-    const day = i + 1;
+  return Array.from({ length: TOTAL_DAYS }, (_, i) => {
+    const day = FIRST_DAY + i; // число декабря
     // Заглушка на время: реальный список (текст/фото/видео на каждый день)
     // будет добавлен позже — тогда type и mediaUrl заполнятся по каждому дню.
-    return { day, type: "text", caption: `Сюрприз дня ${day} — совсем скоро здесь будет настоящее сообщение`, mediaUrl: null };
+    return { day, type: "text", caption: `Сюрприз на ${day} декабря — совсем скоро здесь будет настоящее сообщение`, mediaUrl: null };
   });
 }
 
+// Год зафиксирован: после 31 декабря всё остаётся открытым, пропущенные дни можно догнать
 function getUnlockDate(day) {
+  return new Date(YEAR, 11, day);
+}
+
+function daysUntil(day) {
   const now = new Date();
-  let year = now.getFullYear();
-  const dec25 = new Date(year, 11, 25, 23, 59, 59);
-  if (now > dec25) year += 1;
-  return new Date(year, 11, day);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((getUnlockDate(day) - today) / 86400000);
+}
+
+function isToday(day) {
+  const now = new Date();
+  return now.getFullYear() === YEAR && now.getMonth() === 11 && now.getDate() === day;
+}
+
+function pluralDays(n) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return "день";
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "дня";
+  return "дней";
+}
+
+function lockedMessage(day) {
+  const n = daysUntil(day);
+  const when = n <= 1 ? "Это окошко откроется завтра." : `Это окошко откроется через ${n} ${pluralDays(n)}.`;
+  return `😈 Попытка хомячьего взлома обнаружена! ${when}`;
 }
 
 function catUrlFor(day) {
-  const idx = ((day - 1) % 12) + 1;
+  const idx = ((day - FIRST_DAY) % 12) + 1;
   return `cats/festiveb${String(idx).padStart(2, "0")}.jpg`;
 }
-
-const LOCKED_MESSAGES = [
-  "😈 Попытка хомячьего взлома обнаружена! Возвращайся завтра.",
-];
-let lastMessageIndex = -1;
 
 const toast = document.getElementById("toast");
 const toastBackdrop = document.getElementById("toastBackdrop");
@@ -324,13 +362,8 @@ function hideToast() {
   toastBackdrop.classList.remove("show");
 }
 
-function showToast() {
-  let idx = Math.floor(Math.random() * LOCKED_MESSAGES.length);
-  if (LOCKED_MESSAGES.length > 1 && idx === lastMessageIndex) {
-    idx = (idx + 1) % LOCKED_MESSAGES.length;
-  }
-  lastMessageIndex = idx;
-  toast.textContent = LOCKED_MESSAGES[idx];
+function showToast(day) {
+  toast.textContent = lockedMessage(day);
   toast.classList.add("show");
   toastBackdrop.classList.add("show");
   clearTimeout(toastTimeout);
@@ -343,7 +376,7 @@ toastBackdrop.addEventListener("click", () => {
 });
 
 const surprises = buildSurprises();
-const STORAGE_KEY = "advent-opened-days";
+const STORAGE_KEY = "advent-opened-days-" + YEAR + "-dec";
 
 function loadOpenedDays() {
   try {
@@ -362,7 +395,13 @@ function saveOpenedDays() {
 }
 
 const openedDays = loadOpenedDays();
+const demoOpened = new Set(); // открытые в предпросмотре — не сохраняются
 let demoMode = false;
+const devMode = new URLSearchParams(location.search).has("dev");
+
+function isOpened(day) {
+  return openedDays.has(day) || (demoMode && demoOpened.has(day));
+}
 
 const grid = document.getElementById("grid");
 const progressText = document.getElementById("progressText");
@@ -378,12 +417,12 @@ function isLocked(day) {
 }
 
 function updateProgress() {
-  progressText.textContent = `Открыто ${openedDays.size} из 25 · коснись окошка своего дня`;
+  progressText.textContent = `Открыто ${openedDays.size} из ${TOTAL_DAYS} · коснись окошка сегодняшней даты`;
 }
 
 function openModal(day) {
   const s = surprises.find((x) => x.day === day);
-  modalDay.textContent = `День ${s.day}`;
+  modalDay.textContent = `${s.day} декабря`;
   modalCaption.textContent = s.caption;
   if (s.mediaUrl && (s.type === "photo" || s.type === "video")) {
     modalMedia.style.display = "flex";
@@ -398,17 +437,30 @@ function openModal(day) {
     modalMedia.style.display = "none";
     modalMedia.innerHTML = "";
   }
+  if (!modalBackdrop.classList.contains("open")) {
+    // Запись в историю, чтобы системная кнопка «назад» закрывала окно, а не уходила со страницы
+    try { history.pushState({ adventModal: true }, ""); } catch (e) {}
+  }
   modalBackdrop.classList.add("open");
 }
 
-closeBtn.addEventListener("click", () => modalBackdrop.classList.remove("open"));
-modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) modalBackdrop.classList.remove("open"); });
+function closeModal(fromHistory) {
+  if (!modalBackdrop.classList.contains("open")) return;
+  modalBackdrop.classList.remove("open");
+  modalMedia.innerHTML = ""; // останавливает видео, чтобы звук не играл после закрытия
+  if (!fromHistory && history.state && history.state.adventModal) history.back();
+}
+
+closeBtn.addEventListener("click", () => closeModal(false));
+modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) closeModal(false); });
+window.addEventListener("popstate", () => closeModal(true));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(false); });
 
 function renderGrid() {
   grid.innerHTML = "";
   surprises.forEach((s) => {
-    const wide = s.day === 23 || s.day === 24;
-    const featured = (s.day % 5 === 0 || s.day === 25) && !wide;
+    const wide = s.day === 29 || s.day === 30;
+    const featured = (s.day % 5 === 0 || s.day === LAST_DAY) && !wide;
     const cell = document.createElement("div");
     cell.className = "door-cell" + (featured ? " featured" : "") + (wide ? " wide" : "");
     const tilt = ((s.day * 13) % 5) - 2; // -2..2deg, handmade paper feel
@@ -416,9 +468,11 @@ function renderGrid() {
 
     const btn = document.createElement("button");
     btn.type = "button";
-    const opened = openedDays.has(s.day);
+    const opened = isOpened(s.day);
     const locked = isLocked(s.day);
-    btn.className = "door" + (locked ? " locked" : "") + (opened ? " opened" : "");
+    const today = isToday(s.day) && !opened;
+    btn.className = "door" + (locked ? " locked" : "") + (opened ? " opened" : "") + (today ? " today" : "");
+    btn.setAttribute("aria-label", `${s.day} декабря` + (opened ? ", открыто" : locked ? ", пока закрыто" : ""));
 
     const catUrl = catUrlFor(s.day);
     const corner = festiveFor(s.day).corner;
@@ -433,20 +487,25 @@ function renderGrid() {
     `;
 
     btn.addEventListener("click", () => {
-      if (openedDays.has(s.day)) {
+      if (isOpened(s.day)) {
         openModal(s.day);
         return;
       }
       if (isLocked(s.day)) {
         btn.classList.add("shake");
         setTimeout(() => btn.classList.remove("shake"), 400);
-        showToast();
+        showToast(s.day);
         return;
       }
+      if (btn.classList.contains("flip")) return; // защита от двойного нажатия
       btn.classList.add("flip");
       setTimeout(() => {
-        openedDays.add(s.day);
-        saveOpenedDays();
+        if (demoMode) {
+          demoOpened.add(s.day);
+        } else {
+          openedDays.add(s.day);
+          saveOpenedDays();
+        }
         updateProgress();
         openModal(s.day);
         renderGrid();
@@ -460,11 +519,16 @@ function renderGrid() {
 
 demoToggle.addEventListener("click", () => {
   demoMode = !demoMode;
+  if (!demoMode) demoOpened.clear();
   demoToggle.textContent = demoMode ? "все открыто (тест)" : "режим предпросмотра";
   renderGrid();
 });
 
 const resetBtn = document.getElementById("resetBtn");
+if (devMode) {
+  demoToggle.hidden = false;
+  resetBtn.hidden = false;
+}
 resetBtn.addEventListener("click", () => {
   const sure = confirm("Сбросить весь прогресс? Все открытые окошки снова закроются.");
   if (!sure) return;
