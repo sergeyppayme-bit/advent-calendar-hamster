@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1794289990";
+  var CURRENT_VERSION = "1794290459";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -92,7 +92,25 @@
     cursor: pointer; padding: 8px;
   }
   .dev-toggle { position: relative; z-index: 3; }
-  .dev-toggle[hidden] { display: none; }
+  .dev-toggle[hidden], .dev-panel[hidden], .dev-banner[hidden] { display: none; }
+
+  .dev-banner {
+    position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+    z-index: 30; background: #C0392B; color: #fff; font-size: 12px; font-weight: 700;
+    padding: 6px 14px; border-radius: 999px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    white-space: nowrap; pointer-events: none;
+  }
+  .dev-panel {
+    position: relative; z-index: 3; max-width: 360px; margin: 28px auto 0; padding: 14px 16px;
+    background: rgba(255,253,246,0.94); border: 2px dashed #C0392B; border-radius: 14px;
+    font-size: 13px; text-align: center;
+  }
+  .dev-panel-title { font-weight: 700; color: #C0392B; margin-bottom: 10px; }
+  .dev-panel select, .dev-panel button {
+    display: block; width: 100%; margin: 8px 0 0; padding: 10px; border-radius: 10px;
+    font: inherit; font-size: 14px; border: 1px solid rgba(47,111,107,0.35); background: #fff; color: #275C58;
+  }
+  .dev-panel .dev-danger { color: #C0392B; border-color: rgba(192,57,43,0.4); background: transparent; font-size: 12px; }
 
   .grid {
     position: relative; z-index: 2; max-width: 640px; margin: 0 auto;
@@ -258,10 +276,16 @@
 
   <div class="grid" id="grid"></div>
 
-  <button class="dev-toggle" id="demoToggle" hidden>режим предпросмотра</button>
-  <button class="dev-toggle" id="resetBtn" hidden>сбросить прогресс</button>
+  <div class="dev-panel" id="devPanel" hidden>
+    <div class="dev-panel-title">🧪 Тестовый режим</div>
+    Здесь ничего не сохраняется — у получателя всё останется как было.
+    <select id="devDate" aria-label="Как показывать календарь"></select>
+    <button type="button" id="devCloseAll">Закрыть все окошки заново</button>
+    <button type="button" class="dev-danger" id="resetBtn">Сбросить настоящий прогресс на этом телефоне</button>
+  </div>
 </div>
 
+<div class="dev-banner" id="devBanner" hidden>🧪 ТЕСТ · не сохраняется</div>
 <div class="toast-backdrop" id="toastBackdrop"></div>
 <div class="toast" id="toast"></div>
 
@@ -283,9 +307,10 @@
     mediaUrl: путь к файлу для photo/video (например "media/day5.jpg" —
       создай папку media/ рядом с этим index.html и положи туда файлы)
   Окошки — это даты с 22 по 31 декабря (YEAR ниже). Каждое открывается в свой день.
-  Служебные кнопки «режим предпросмотра» и «сбросить прогресс» видны только
-  по ссылке с ?dev=1 в конце адреса — получатель их не увидит.
-  В режиме предпросмотра открытые окошки НЕ сохраняются.
+  ТЕСТОВЫЙ РЕЖИМ: добавь ?dev=1 в конец адреса сайта.
+  Внизу появится панель: можно открыть все окошки сразу или посмотреть,
+  как календарь выглядит в любой день с 21 по 31 декабря.
+  В тестовом режиме ничего не сохраняется — настоящий прогресс не меняется.
 */
 
 const FESTIVE = [ // corner — в каком углу номер окошка (по порядку с 7 декабря)
@@ -322,18 +347,24 @@ function buildSurprises() {
 }
 
 // Год зафиксирован: после 31 декабря всё остаётся открытым, пропущенные дни можно догнать
+// В тестовом режиме можно подменить «сегодня» (см. панель внизу)
+let fakeToday = null;
+function currentDate() {
+  return fakeToday ? new Date(fakeToday) : new Date();
+}
+
 function getUnlockDate(day) {
   return new Date(YEAR, 11, day);
 }
 
 function daysUntil(day) {
-  const now = new Date();
+  const now = currentDate();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((getUnlockDate(day) - today) / 86400000);
 }
 
 function isToday(day) {
-  const now = new Date();
+  const now = currentDate();
   return now.getFullYear() === YEAR && now.getMonth() === 11 && now.getDate() === day;
 }
 
@@ -391,23 +422,23 @@ function loadOpenedDays() {
 }
 
 function saveOpenedDays() {
+  if (devMode) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...openedDays]));
   } catch (e) {}
 }
 
-const openedDays = loadOpenedDays();
-const demoOpened = new Set(); // открытые в предпросмотре — не сохраняются
-let demoMode = false;
 const devMode = new URLSearchParams(location.search).has("dev");
+// В тестовом режиме — отдельный прогресс только в памяти, настоящий не трогаем
+const openedDays = devMode ? new Set() : loadOpenedDays();
+let demoMode = devMode; // в тесте по умолчанию все окошки доступны
 
 function isOpened(day) {
-  return openedDays.has(day) || (demoMode && demoOpened.has(day));
+  return openedDays.has(day);
 }
 
 const grid = document.getElementById("grid");
 const progressText = document.getElementById("progressText");
-const demoToggle = document.getElementById("demoToggle");
 const modalBackdrop = document.getElementById("modalBackdrop");
 const modalDay = document.getElementById("modalDay");
 const modalMedia = document.getElementById("modalMedia");
@@ -415,7 +446,7 @@ const modalCaption = document.getElementById("modalCaption");
 const closeBtn = document.getElementById("closeBtn");
 
 function isLocked(day) {
-  return !demoMode && new Date() < getUnlockDate(day);
+  return !demoMode && currentDate() < getUnlockDate(day);
 }
 
 function updateProgress() {
@@ -503,12 +534,8 @@ function renderGrid() {
       if (btn.classList.contains("flip")) return; // защита от двойного нажатия
       btn.classList.add("flip");
       setTimeout(() => {
-        if (demoMode) {
-          demoOpened.add(s.day);
-        } else {
-          openedDays.add(s.day);
-          saveOpenedDays();
-        }
+        openedDays.add(s.day);
+        saveOpenedDays();
         updateProgress();
         openModal(s.day);
         renderGrid();
@@ -520,26 +547,35 @@ function renderGrid() {
   });
 }
 
-demoToggle.addEventListener("click", () => {
-  demoMode = !demoMode;
-  if (!demoMode) demoOpened.clear();
-  demoToggle.textContent = demoMode ? "все открыто (тест)" : "режим предпросмотра";
-  renderGrid();
-});
-
-const resetBtn = document.getElementById("resetBtn");
 if (devMode) {
-  demoToggle.hidden = false;
-  resetBtn.hidden = false;
+  document.getElementById("devPanel").hidden = false;
+  document.getElementById("devBanner").hidden = false;
+
+  const devDate = document.getElementById("devDate");
+  const options = [["all", "Все окошки открыты"], ["now", "Как сегодня на самом деле"]];
+  for (let d = FIRST_DAY - 1; d <= LAST_DAY; d++) options.push([String(d), `Как будто сегодня ${d} декабря`]);
+  devDate.innerHTML = options.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+
+  devDate.addEventListener("change", () => {
+    const v = devDate.value;
+    demoMode = v === "all";
+    fakeToday = /^\d+$/.test(v) ? new Date(YEAR, 11, Number(v), 12, 0) : null;
+    renderGrid();
+  });
+
+  document.getElementById("devCloseAll").addEventListener("click", () => {
+    openedDays.clear();
+    updateProgress();
+    renderGrid();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    const sure = confirm("Сбросить настоящий прогресс на этом телефоне? Все открытые окошки снова закроются.");
+    if (!sure) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    alert("Готово. Открой сайт без ?dev=1 — всё закрыто.");
+  });
 }
-resetBtn.addEventListener("click", () => {
-  const sure = confirm("Сбросить весь прогресс? Все открытые окошки снова закроются.");
-  if (!sure) return;
-  openedDays.clear();
-  saveOpenedDays();
-  updateProgress();
-  renderGrid();
-});
 
 function renderSnow() {
   const layer = document.getElementById("snowLayer");
