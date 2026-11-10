@@ -13,7 +13,7 @@
 <title>Адвент-календарь</title>
 <script>
 (function () {
-  var CURRENT_VERSION = "1794290459";
+  var CURRENT_VERSION = "1794323071";
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -237,6 +237,7 @@
     justify-content: center; margin-bottom: 16px; font-size: 40px; overflow: hidden;
   }
   .modal-day { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 14px; color: #E8C878; margin-bottom: 10px; }
+  .modal-title { font-family: 'Comfortaa', sans-serif; font-weight: 700; font-size: 24px; line-height: 1.3; color: #FFFDF6; margin: 0 0 12px; text-shadow: 0 1px 8px rgba(0,0,0,0.4); }
   .modal-caption { font-size: 17px; line-height: 1.55; margin: 0; color: #FFFDF6; text-shadow: 0 1px 6px rgba(0,0,0,0.35); }
 
   .toast-backdrop {
@@ -294,6 +295,7 @@
     <button class="close-btn" id="closeBtn">✕</button>
     <div class="modal-day" id="modalDay"></div>
     <div class="media-placeholder" id="modalMedia" style="display:none;"></div>
+    <h2 class="modal-title" id="modalTitle"></h2>
     <p class="modal-caption" id="modalCaption"></p>
   </div>
 </div>
@@ -337,12 +339,42 @@ const FIRST_DAY = 22;  // 22 декабря
 const LAST_DAY = 31;   // 31 декабря
 const TOTAL_DAYS = LAST_DAY - FIRST_DAY + 1; // 10
 
+// ПОДАРКИ ПО ДНЯМ. title — название подарка, caption — подпись под ним.
+// Чтобы добавить фото/видео: type: "photo" или "video", mediaUrl: "media/day22.jpg"
+const GIFTS = {
+  // Вт 22 — просто и приятно в будни
+  22: { title: "Любимые вкусняшки", caption: "Начинаем с самого приятного: всё твоё любимое уже ждёт тебя 🍫" },
+  // Ср 23 — работает и в рабочий день
+  23: { title: "Целый день комплиментов", caption: "Сегодня весь день буду напоминать, какая ты замечательная. Готовься 💌" },
+  // Чт 24 — уютный вечер дома
+  24: { title: "Кино-вечер", caption: "Плед, вкусности и фильм, который выбираешь ты. Без споров 🎬" },
+  // Пт 25 — вечер пятницы, на спектакли обычно проще попасть
+  25: { title: "Билеты в театр", caption: "Наряжайся: вечером идём в театр 🎭" },
+  // Сб 26 — днём в субботу
+  26: { title: "Мастер-класс вдвоём", caption: "Сегодня учимся чему-то новому вместе. Будет весело 🎨" },
+  // Вс 27 — воскресенье для отдыха
+  27: { title: "Сертификат на массаж", caption: "Воскресенье — для отдыха. Расслабься, ты заслужила 💆‍♀️" },
+  // Пн 28 — дома после работы
+  28: { title: "Массаж ног", caption: "После рабочего дня — массаж ног от меня. Ложись и ни о чём не думай 🦶✨" },
+  // Вт 29 — ПОКА СВОБОДНО, вписать четвёртый подарок
+  29: { title: "Сюрприз", caption: "Этот подарок ещё в пути… Хомяк обещал успеть 🐹" },
+  // Ср 30 — вечер перед Новым годом
+  30: { title: "Свидание-сюрприз", caption: "Куда идём — секрет. Просто будь готова к вечеру ❤️" },
+  // Чт 31 — финал
+  31: { title: "Парфюм", caption: "Финальный подарок, чтобы ты встретила Новый год с новым любимым ароматом ✨ С наступающим!" },
+};
+
 function buildSurprises() {
   return Array.from({ length: TOTAL_DAYS }, (_, i) => {
     const day = FIRST_DAY + i; // число декабря
-    // Заглушка на время: реальный список (текст/фото/видео на каждый день)
-    // будет добавлен позже — тогда type и mediaUrl заполнятся по каждому дню.
-    return { day, type: "text", caption: `Сюрприз на ${day} декабря — совсем скоро здесь будет настоящее сообщение`, mediaUrl: null };
+    const g = GIFTS[day] || {};
+    return {
+      day,
+      type: g.type || "text",
+      title: g.title || "Сюрприз",
+      caption: g.caption || "",
+      mediaUrl: g.mediaUrl || null,
+    };
   });
 }
 
@@ -443,6 +475,7 @@ const modalBackdrop = document.getElementById("modalBackdrop");
 const modalDay = document.getElementById("modalDay");
 const modalMedia = document.getElementById("modalMedia");
 const modalCaption = document.getElementById("modalCaption");
+const modalTitle = document.getElementById("modalTitle");
 const closeBtn = document.getElementById("closeBtn");
 
 function isLocked(day) {
@@ -456,6 +489,7 @@ function updateProgress() {
 function openModal(day) {
   const s = surprises.find((x) => x.day === day);
   modalDay.textContent = `${s.day} декабря`;
+  modalTitle.textContent = s.title;
   modalCaption.textContent = s.caption;
   if (s.mediaUrl && (s.type === "photo" || s.type === "video")) {
     modalMedia.style.display = "flex";
